@@ -665,7 +665,7 @@ async function analyze() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': 'YOUR_ANTHROPIC_API_KEY_HERE',
+        'x-api-key': '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',
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
@@ -716,101 +716,3 @@ function renderResults(data) {
   if (data.stage_percent <= 33) bar.style.background = '#8b2020';
   else if (data.stage_percent <= 66) bar.style.background = '#7a6540';
   else bar.style.background = '#2a7a4a';
-
-  // Text blocks
-  setHTML('maturity-text', data.maturity_assessment);
-  setHTML('accuracy-text', data.biblical_accuracy);
-  setHTML('markers-text', data.key_markers);
-
-  // Warning
-  const warningWrap = document.getElementById('warning-wrap');
-  if (data.counterfeit_maturity && data.counterfeit_explanation) {
-    document.getElementById('warning-text').textContent = data.counterfeit_explanation;
-    warningWrap.style.display = 'block';
-  } else {
-    warningWrap.style.display = 'none';
-  }
-
-  document.getElementById('results').classList.add('visible');
-  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function setHTML(id, text) {
-  const el = document.getElementById(id);
-  if (!text) { el.innerHTML = ''; return; }
-  el.innerHTML = text.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
-}
-
-function clearAll() {
-  document.getElementById('content-input').value = '';
-  document.getElementById('results').classList.remove('visible');
-  document.getElementById('error-block').classList.remove('visible');
-  document.getElementById('status-text').textContent = '';
-}
-
-function toggleFramework() {
-  const content = document.getElementById('framework-content');
-  const arrow = document.getElementById('toggle-arrow');
-  content.classList.toggle('visible');
-  arrow.classList.toggle('open');
-}
-
-document.getElementById('content-input').addEventListener('keydown', function(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
-});
-
-// Onboarding modal
-const MODAL_STEPS = [
-  {
-    title: "Before you begin",
-    body: "This tool is <strong>a mirror, not a verdict.</strong> It evaluates theological content against a biblical framework of spiritual maturity. It does not judge anyone's heart, salvation, or standing before God."
-  },
-  {
-    title: "What to paste",
-    body: "Paste content you genuinely want examined — a post, a testimony, a doctrinal claim, something that didn't sit right with you. The tool works best on <strong>real theological content,</strong> not casual conversation."
-  },
-  {
-    title: "How to receive the results",
-    body: "This tool may identify patterns associated with spiritual immaturity or counterfeit discernment. That assessment reflects the <strong>content,</strong> not the person. Use findings with <strong>humility and prayer.</strong>"
-  },
-  {
-    title: "This is an aid, not a final word",
-    body: "This is a discernment aid, not a replacement for your own prayerful study of Scripture. <strong>Always bring findings back to the Word.</strong> Let it start a conversation, not end one.",
-    lastStep: true
-  }
-];
-
-let currentStep = 0;
-
-function renderModal(step) {
-  const s = MODAL_STEPS[step];
-  document.getElementById('modal-title').textContent = s.title;
-  document.getElementById('modal-body').innerHTML = s.body;
-  document.getElementById('modal-step-num').textContent = `${step + 1} of ${MODAL_STEPS.length}`;
-  document.getElementById('modal-btn').textContent = s.lastStep ? 'Enter the tool' : 'I understand';
-
-  for (let i = 0; i < MODAL_STEPS.length; i++) {
-    const dot = document.getElementById(`dot-${i}`);
-    dot.className = 'modal-dot' + (i === step ? ' active' : i < step ? ' done' : '');
-  }
-}
-
-function advanceModal() {
-  currentStep++;
-  if (currentStep >= MODAL_STEPS.length) {
-    document.getElementById('modal-overlay').classList.add('hidden');
-    document.removeEventListener('keydown', modalKeyHandler);
-  } else {
-    renderModal(currentStep);
-  }
-}
-
-function modalKeyHandler(e) {
-  if (e.key === 'Enter') advanceModal();
-}
-
-document.addEventListener('keydown', modalKeyHandler);
-renderModal(0);
-</script>
-</body>
-</html>
