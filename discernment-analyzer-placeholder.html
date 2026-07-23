@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discernment Analyzer — Faithfullydead</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #222222;
+    --border-bright: #333333;
+    --text: #d4d0c8;
+    --text-dim: #666660;
+    --text-muted: #444440;
+    --accent: #c8a96e;
+    --accent-dim: #7a6540;
+    --red: #8b2020;
+    --red-bright: #c43a3a;
+    --stage-low: #8b2020;
+    --stage-mid: #7a6540;
+    --stage-high: #2a5c3a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .site-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 700;
+    color: #f0ece0;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    max-width: 520px;
+  }
+
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 20px 0;
+  }
+
+  .input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    padding: 14px 16px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent-dim);
+  }
+
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-radius: 2px;
+    padding: 11px 22px;
+    transition: all 0.15s;
+  }
+
+  .btn-analyze {
+    background: var(--accent);
+    color: #0a0a0a;
+    font-weight: 500;
+  }
+
+  .btn-analyze:hover:not(:disabled) {
+    background: #d4b87a;
+  }
+
+  .btn-analyze:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-clear {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-bright);
+  }
+
+  .btn-clear:hover {
+    color: var(--text);
+    border-color: #555;
+  }
+
+  .status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+
+  /* Results */
+  #results {
+    margin-top: 36px;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  #results.visible {
+    display: flex;
+  }
+
+  .result-rule {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 28px;
+  }
+
+  .stage-banner {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-left: 3px solid var(--accent);
+    padding: 18px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stage-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .stage-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #f0ece0;
+  }
+
+  .stage-bar-wrap {
+    margin-top: 8px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .stage-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .result-block {
+    margin-bottom: 24px;
+  }
+
+  .result-block-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .result-text p { margin-bottom: 10px; }
+  .result-text p:last-child { margin-bottom: 0; }
+
+  .warning-block {
+    background: #1a0a0a;
+    border: 1px solid var(--red);
+    border-left: 3px solid var(--red-bright);
+    padding: 14px 16px;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: #c8a0a0;
+  }
+
+  .warning-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--red-bright);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* Loading */
+  .loading-wrap {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 0;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+
+  .loading-wrap.visible { display: flex; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-block {
+    background: #1a0a0a;
+    border: 1px solid var(--red);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #c8a0a0;
+    display: none;
+    margin-top: 16px;
+  }
+
+  .error-block.visible { display: block; }
+
+  /* Framework reference */
+  .framework-toggle {
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .toggle-btn {
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 0;
+    border: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle-btn:hover { color: var(--text); }
+
+  .toggle-arrow { transition: transform 0.2s; font-size: 10px; }
+  .toggle-arrow.open { transform: rotate(90deg); }
+
+  .framework-content {
+    display: none;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+
+  .framework-content.visible { display: block; }
+
+  .fw-stage {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .fw-stage:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .fw-stage-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+  }
+
+  .fw-stage-name {
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  footer {
+    margin-top: 60px;
+    padding: 20px 20px 0;
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    border-top: 1px solid var(--border);
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Onboarding Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .modal-overlay.hidden {
+    display: none;
+  }
+
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-top: 2px solid var(--accent);
+    max-width: 480px;
+    width: 100%;
+    padding: 32px 28px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+  }
+
+  .modal-step-indicator {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .modal-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-bright);
+    transition: background 0.2s;
+  }
+
+  .modal-dot.active {
+    background: var(--accent);
+  }
+
+  .modal-dot.done {
+    background: var(--accent-dim);
+  }
+
+  .modal-step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    margin-bottom: -8px;
+  }
+
+  .modal-body {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .modal-body strong {
+    color: #f0ece0;
+    font-weight: 500;
+  }
+
+  .modal-acknowledge {
+    background: var(--accent);
+    color: #0a0a0a;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 13px 24px;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background 0.15s;
+  }
+
+  .modal-acknowledge:hover {
+    background: #d4b87a;
+  }
+
+  .modal-enter-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: -8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-step-indicator">
+      <div class="modal-dot active" id="dot-0"></div>
+      <div class="modal-dot" id="dot-1"></div>
+      <div class="modal-dot" id="dot-2"></div>
+      <div class="modal-dot" id="dot-3"></div>
+      <span class="modal-step-num" id="modal-step-num">1 of 4</span>
+    </div>
+    <div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+    <button class="modal-acknowledge" id="modal-btn" onclick="advanceModal()">I understand</button>
+    <div class="modal-enter-label">or press Enter</div>
+  </div>
+</div>
+
+<header>
+  <span class="site-label">Faithfullydead · Discernment Tools</span>
+  <h1>Spiritual Maturity Analyzer</h1>
+  <p class="subtitle">Paste any post, comment, testimony, or doctrinal statement. The tool will assess its maturity level against a biblical framework and evaluate its theological accuracy.</p>
+</header>
+
+<main>
+  <div class="input-section">
+    <label for="content-input">Paste content to analyze</label>
+    <textarea
+      id="content-input"
+      placeholder="Paste a Facebook comment, a doctrinal statement, a testimony, a prophetic claim — anything you want evaluated..."
+    ></textarea>
+    <div class="actions">
+      <button class="btn-analyze" id="analyze-btn" onclick="analyze()">Analyze</button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+      <span class="status" id="status-text"></span>
+    </div>
+  </div>
+
+  <div class="loading-wrap" id="loading">
+    <div class="spinner"></div>
+    <span>Evaluating against biblical framework...</span>
+  </div>
+
+  <div class="error-block" id="error-block"></div>
+
+  <div id="results">
+    <div class="result-rule"></div>
+
+    <div class="stage-banner" id="stage-banner">
+      <span class="stage-label">Maturity Stage</span>
+      <span class="stage-value" id="stage-value"></span>
+      <div class="stage-bar-wrap">
+        <div class="stage-bar" id="stage-bar"></div>
+      </div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-block-label">Maturity Assessment</div>
+      <div class="result-text" id="maturity-text"></div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-block-label">Biblical Accuracy</div>
+      <div class="result-text" id="accuracy-text"></div>
+    </div>
+
+    <div id="warning-wrap" style="display:none;" class="result-block">
+      <div class="result-block-label">Discernment Flag</div>
+      <div class="warning-block">
+        <div class="warning-label">⚠ Counterfeit Maturity Detected</div>
+        <div id="warning-text"></div>
+      </div>
+    </div>
+
+    <div class="result-block">
+      <div class="result-block-label">Key Markers Found</div>
+      <div class="result-text" id="markers-text"></div>
+    </div>
+  </div>
+
+  <div class="framework-toggle">
+    <button class="toggle-btn" onclick="toggleFramework()">
+      <span class="toggle-arrow" id="toggle-arrow">▶</span>
+      View the maturity framework
+    </button>
+    <div class="framework-content" id="framework-content">
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 1</div>
+        <div class="fw-stage-name">New Believer</div>
+        Assurance of salvation, learning repentance and basic Scripture. Sins forgiven, knows God as Father, dependent on others.
+      </div>
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 2</div>
+        <div class="fw-stage-name">Child in the Faith</div>
+        Learning obedience and basic doctrine. Easily influenced, experience-driven, community-dependent for validation.
+      </div>
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 3</div>
+        <div class="fw-stage-name">Young Believer</div>
+        Developing spiritual disciplines, beginning to resist temptation. The Word is taking root.
+      </div>
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 4</div>
+        <div class="fw-stage-name">Strong Believer</div>
+        Growing discernment, consistent victory over sin. Tests things against Scripture. Discernment has cost them something.
+      </div>
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 5</div>
+        <div class="fw-stage-name">Mature Disciple</div>
+        Christlike character, humility, wisdom. Stable under pressure. Holds complex theology without collapsing into error.
+      </div>
+      <div class="fw-stage">
+        <div class="fw-stage-num">STAGE 6</div>
+        <div class="fw-stage-name">Spiritual Parent</div>
+        Teaching, discipling, reproducing mature believers. Deep intimacy with Christ. Wisdom from sustained walking with God.
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  faithfullydead.com · discernment ministry · choose this day who you serve
+</footer>
+
+<script>
+const SYSTEM_PROMPT = `You are a discernment ministry tool built on a biblical framework of spiritual maturity. Your task is to evaluate theological and spiritual content submitted by users and return a structured JSON assessment.
+
+THE MATURITY FRAMEWORK:
+Stage 1 - New Believer: Assurance of salvation, basic repentance, learning Scripture. Sins forgiven, knows God as Father, dependent on others, easily influenced.
+Stage 2 - Child in the Faith: Learning obedience and basic doctrine. Experience-driven, seeks communal validation, easily swayed by signs and wonders, milk-level teaching.
+Stage 3 - Young Believer: Developing spiritual disciplines, beginning to resist temptation, the Word taking root, growing consistency.
+Stage 4 - Strong Believer: Growing discernment, consistent Scripture testing, victory over sin, discernment has cost them something personally. Hebrews 5:14 markers visible.
+Stage 5 - Mature Disciple: Christlike character, humility, wisdom, stability under pressure, holds complex theology without collapsing into error.
+Stage 6 - Spiritual Parent: Reproducing mature believers, deep intimacy with Christ, sustained wisdom, able to nurture others through hard things.
+
+COUNTERFEIT MATURITY MARKERS (flag these):
+- Claims advanced spiritual insight or prophetic authority while accepting unverified signs (glory clouds, feathers, light orbs in photos, fire shapes in images)
+- Discernment that only ever confirms, never cuts against their own community or desires
+- Mistake exotic experience for depth
+- Self-identify as spiritually mature or prophetically advanced without biblical grounding
+- Accept manipulated photos or ambiguous phenomena as supernatural evidence without testing
+- Knowledge without transformation, theology without obedience
+
+RESPONSE FORMAT:
+Return ONLY a valid JSON object with no preamble, no markdown, no backticks. Use this exact structure:
+{
+  "stage_number": (integer 1-6, or 0 if content has insufficient theological content),
+  "stage_name": (string),
+  "stage_percent": (integer 0-100, representing position within the full 1-6 scale),
+  "maturity_assessment": (2-4 paragraphs of honest pastoral assessment. Be direct. Name what you see.),
+  "biblical_accuracy": (2-3 paragraphs evaluating whether the theological position itself holds up to Scripture. Cite specific passages.),
+  "counterfeit_maturity": (boolean — true if counterfeit maturity markers are present),
+  "counterfeit_explanation": (string — if counterfeit_maturity is true, explain specifically what markers are present and why this matters. If false, empty string.),
+  "key_markers": (2-4 sentence summary of the specific textual markers that drove the assessment),
+  "insufficient_content": (boolean — true if the text lacks enough theological content to assess)
+}`;
+
+async function analyze() {
+  const input = document.getElementById('content-input').value.trim();
+  if (!input) return;
+
+  const btn = document.getElementById('analyze-btn');
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const errorBlock = document.getElementById('error-block');
+
+  btn.disabled = true;
+  loading.classList.add('visible');
+  results.classList.remove('visible');
+  errorBlock.classList.remove('visible');
+  document.getElementById('status-text').textContent = '';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': 'YOUR_ANTHROPIC_API_KEY_HERE',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: `Analyze this content:\n\n${input}` }]
+      })
+    });
+
+    const data = await response.json();
+    const rawText = data.content?.map(b => b.text || '').join('').trim();
+
+    let parsed;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch {
+      throw new Error('Could not parse response. Try again.');
+    }
+
+    if (parsed.insufficient_content) {
+      document.getElementById('status-text').textContent = 'Not enough theological content to assess.';
+      loading.classList.remove('visible');
+      btn.disabled = false;
+      return;
+    }
+
+    renderResults(parsed);
+
+  } catch (err) {
+    errorBlock.textContent = err.message || 'Something went wrong. Please try again.';
+    errorBlock.classList.add('visible');
+  } finally {
+    loading.classList.remove('visible');
+    btn.disabled = false;
+  }
+}
+
+function renderResults(data) {
+  // Stage banner
+  document.getElementById('stage-value').textContent = `Stage ${data.stage_number} — ${data.stage_name}`;
+  document.getElementById('stage-bar').style.width = `${data.stage_percent}%`;
+
+  // Color the bar by level
+  const bar = document.getElementById('stage-bar');
+  if (data.stage_percent <= 33) bar.style.background = '#8b2020';
+  else if (data.stage_percent <= 66) bar.style.background = '#7a6540';
+  else bar.style.background = '#2a7a4a';
+
+  // Text blocks
+  setHTML('maturity-text', data.maturity_assessment);
+  setHTML('accuracy-text', data.biblical_accuracy);
+  setHTML('markers-text', data.key_markers);
+
+  // Warning
+  const warningWrap = document.getElementById('warning-wrap');
+  if (data.counterfeit_maturity && data.counterfeit_explanation) {
+    document.getElementById('warning-text').textContent = data.counterfeit_explanation;
+    warningWrap.style.display = 'block';
+  } else {
+    warningWrap.style.display = 'none';
+  }
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setHTML(id, text) {
+  const el = document.getElementById(id);
+  if (!text) { el.innerHTML = ''; return; }
+  el.innerHTML = text.split('\n').filter(p => p.trim()).map(p => `<p>${p}</p>`).join('');
+}
+
+function clearAll() {
+  document.getElementById('content-input').value = '';
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('error-block').classList.remove('visible');
+  document.getElementById('status-text').textContent = '';
+}
+
+function toggleFramework() {
+  const content = document.getElementById('framework-content');
+  const arrow = document.getElementById('toggle-arrow');
+  content.classList.toggle('visible');
+  arrow.classList.toggle('open');
+}
+
+document.getElementById('content-input').addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyze();
+});
+
+// Onboarding modal
+const MODAL_STEPS = [
+  {
+    title: "Before you begin",
+    body: "This tool is <strong>a mirror, not a verdict.</strong> It evaluates theological content against a biblical framework of spiritual maturity. It does not judge anyone's heart, salvation, or standing before God."
+  },
+  {
+    title: "What to paste",
+    body: "Paste content you genuinely want examined — a post, a testimony, a doctrinal claim, something that didn't sit right with you. The tool works best on <strong>real theological content,</strong> not casual conversation."
+  },
+  {
+    title: "How to receive the results",
+    body: "This tool may identify patterns associated with spiritual immaturity or counterfeit discernment. That assessment reflects the <strong>content,</strong> not the person. Use findings with <strong>humility and prayer.</strong>"
+  },
+  {
+    title: "This is an aid, not a final word",
+    body: "This is a discernment aid, not a replacement for your own prayerful study of Scripture. <strong>Always bring findings back to the Word.</strong> Let it start a conversation, not end one.",
+    lastStep: true
+  }
+];
+
+let currentStep = 0;
+
+function renderModal(step) {
+  const s = MODAL_STEPS[step];
+  document.getElementById('modal-title').textContent = s.title;
+  document.getElementById('modal-body').innerHTML = s.body;
+  document.getElementById('modal-step-num').textContent = `${step + 1} of ${MODAL_STEPS.length}`;
+  document.getElementById('modal-btn').textContent = s.lastStep ? 'Enter the tool' : 'I understand';
+
+  for (let i = 0; i < MODAL_STEPS.length; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.className = 'modal-dot' + (i === step ? ' active' : i < step ? ' done' : '');
+  }
+}
+
+function advanceModal() {
+  currentStep++;
+  if (currentStep >= MODAL_STEPS.length) {
+    document.getElementById('modal-overlay').classList.add('hidden');
+    document.removeEventListener('keydown', modalKeyHandler);
+  } else {
+    renderModal(currentStep);
+  }
+}
+
+function modalKeyHandler(e) {
+  if (e.key === 'Enter') advanceModal();
+}
+
+document.addEventListener('keydown', modalKeyHandler);
+renderModal(0);
+</script>
+</body>
+</html>
